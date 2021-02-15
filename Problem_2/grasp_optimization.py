@@ -122,7 +122,7 @@ def precompute_force_closure(grasp_normals, points, friction_coeffs):
         """
 
         ########## Your code starts here ##########
-        # TODO: Compute the force closure forces as a stacked vector of shape (N*M)
+        # TODO: Compute the force closure forces as a stacked vector of shape (M*D)
         f = np.zeros(M*D)
 
         ########## Your code ends here ##########
