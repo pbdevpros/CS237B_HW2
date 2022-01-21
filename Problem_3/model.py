@@ -1,6 +1,4 @@
-import tensorflow as tf1
-import tensorflow.compat.v2 as tf
-tf1.compat.v1.enable_eager_execution()
+import tensorflow as tf 
 
 DIM_IMG = (224, 224)
 
@@ -63,6 +61,7 @@ def build_model():
 
     p_class = tf.keras.layers.Dense(1, name='p_class')(img_input)
     mu = tf.keras.layers.Dense(1, name='mu')(p_class)
+
     ########## Your code ends here ##########
 
     a_pred = AccelerationLaw(name='a')((mu, th_input))
@@ -91,10 +90,9 @@ def build_baseline_model():
     ########## Your code starts here ##########
     # TODO: Replace the following with your model from build_model().
 
-    a_pred = tf.keras.layers.Dense(1, name='a')(img_input)
     ########## Your code ends here ##########
 
-    return tf.keras.Model(inputs=[img_input], outputs=[a_pred])
+    return tf.keras.Model(inputs=[img_input, th_input], outputs=[a_pred])
 
 def loss(a_actual, a_pred):
     """

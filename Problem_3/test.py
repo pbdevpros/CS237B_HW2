@@ -1,23 +1,19 @@
 #!/usr/bin/env python
 
-import argparse
-import os
-import pickle
-import re
+import argparse, os, pickle, re, pdb, glob
 
 import cv2 as cv
 import matplotlib.pyplot as plt
 import numpy as np
-import tensorflow as tf1
-import tensorflow.compat.v2 as tf
-tf1.compat.v1.enable_eager_execution()
+import tensorflow as tf 
 
 from model import build_model, build_baseline_model, loss, AccelerationLaw
 import utils
 
 SIZE_BATCH = 32
-DIR_CHECKPOINT = 'trained_models/'
-DIR_DATASET = 'phys101/scenarios/ramp'
+
+DIR_CHECKPOINT = 'trained_models' + os.sep
+DIR_DATASET = os.path.join('phys101', 'scenarios', 'ramp')
 
 def load_video(path_video):
     # Load video
@@ -36,10 +32,15 @@ def load_video(path_video):
 
 def show_image(frames, idx_frame, path_video, keypoints, params):
     color = (0,0,255)
-    experiment = re.search(r'phys101/scenarios/ramp/(.*)/Camera_1.mp4', path_video).group(1)
+    #search_path = os.path.join('phys101', 'scenarios', 'ramp', '(.*)', 'Camera_1.mp4')
+    search_path = r'phys101/scenarios/ramp/(.*)/Camera_1.mp4'
+    print(path_video)
+    experiment = re.search(search_path, path_video).group(1)
     img = frames[idx_frame].copy()
-    img = cv.putText(img, "{}: {}/{}".format(experiment, idx_frame+1, len(frames)),
-                     (50,70), cv.FONT_HERSHEY_DUPLEX, 1, color, 2)
+
+    image_text = str(experiment) + ": " + str(idx_frame+1) + os.sep + str(len(frames))
+    img = cv.putText(img, image_text, (50,70), cv.FONT_HERSHEY_DUPLEX, 1, color, 2)
+
     if 'mu_pred' in params:
         img = cv.putText(img, "a_pred: {:.3f}, a_groundtruth: {:.3f}, mu_pred: {:.3f}".format(params['a_pred'], params['a_groundtruth'], params['mu_pred']),
                          (50,100), cv.FONT_HERSHEY_DUPLEX, 0.5, color, 1)
@@ -140,7 +141,10 @@ def compute_accelerations(video_paths, keypoints):
     return accelerations
 
 def load_keypoints(dir_dataset, ramp_surface):
-    dataset = tf.data.Dataset.list_files('phys101/scenarios/ramp/*/*/*/Camera_1.mp4', shuffle=False)
+    dataset_path = os.path.join('phys101', 'scenarios', 'ramp', '*', '*', '*', 'Camera_1.mp4')
+    dataset_fnames = [fname.replace(os.sep, "/") for fname in glob.glob(dataset_path)]
+    #dataset = tf.data.Dataset.list_files(dataset_path, shuffle=False)
+    dataset = tf.data.Dataset.from_tensor_slices(dataset_fnames)
     size_dataset = tf.data.experimental.cardinality(dataset).numpy() - 1  # 1804 (w/o last video - broken)
     dataset = dataset.take(size_dataset)
     video_paths = [d.numpy().decode('utf-8') for d in dataset]
@@ -168,6 +172,10 @@ if __name__ == '__main__':
     video_paths = [p.decode('utf-8') for p in np.concatenate([d[0][2] for d in test_dataset]).tolist()]
     a_groundtruth = np.concatenate([d[1] for d in test_dataset])
 
+    # Load dataset again without the filenames 
+    _, test_dataset = utils.load_dataset(DIR_DATASET,
+                                         ramp_surface=ramp_surface,
+                                         size_batch=SIZE_BATCH)
     # Build model
     if args.baseline:
         model = tf.keras.models.load_model(DIR_CHECKPOINT + 'trained_baseline.h5', custom_objects={'loss': loss})

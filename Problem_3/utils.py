@@ -1,16 +1,14 @@
-import re
-import os
+import re, glob, os, pdb
 
 import numpy as np
-import tensorflow as tf1
-import tensorflow.compat.v2 as tf
-tf1.compat.v1.enable_eager_execution()
+import tensorflow as tf 
 
 def load_accelerations(filename, dataset):
     accelerations_dict = {}
     with open(filename) as f:
         for line in f:
-            path_video, a = line.split('\t')
+            hardcoded_path_video, a = line.split('\t')
+            path_video = hardcoded_path_video
             accelerations_dict[path_video] =float(a)
 
     accelerations = []
@@ -32,7 +30,7 @@ def get_initial_video_frame(d):
     path_video = d
     path_img = tf.strings.substr(path_video, 0, tf.strings.length(path_video) - 4)
     path_img = tf.strings.regex_replace(path_img, '/', '-')
-    path_img = tf.strings.join(['frames/', path_img, '.jpg'])
+    path_img = tf.strings.join(['frames', os.sep, path_img, '.jpg'])
     img = tf.io.read_file(path_img)
     img = tf.image.decode_jpeg(img, channels=3)
     img = tf.image.convert_image_dtype(img, tf.float32)
@@ -40,9 +38,10 @@ def get_initial_video_frame(d):
 
 def load_dataset(path_experiment, ramp_surface=1, size_batch=1, return_filenames=False):
     # List all video files
-    dataset = tf.data.Dataset.list_files(path_experiment + '/*/*0_0{}/*/Camera_1.mp4'.format(ramp_surface),
-                                         shuffle=False)
-
+    path = os.path.join(path_experiment, "*", "*0_0{}".format(ramp_surface), "*", "Camera_1.mp4")
+    fnames = glob.glob(path)
+    fnames = [fname.replace(os.sep, "/") for fname in fnames]
+    dataset = tf.data.Dataset.from_tensor_slices(fnames)
     # Compute size of dataset
     size_dataset = tf.data.experimental.cardinality(dataset).numpy() - 1  # 1804 (w/o last video - broken)
     num_batches = int((size_dataset + 0.5) / size_batch)
@@ -52,7 +51,10 @@ def load_dataset(path_experiment, ramp_surface=1, size_batch=1, return_filenames
 
     # Load acceleration labels
     accelerations = tf.data.Dataset.from_tensor_slices(load_accelerations('accelerations.log', dataset))
-    angles = tf.data.Dataset.from_tensor_slices(parse_angles(dataset))
+    list_accel = list(accelerations.as_numpy_iterator())
+    parsed_angles = parse_angles(dataset)
+    # angles = tf.data.Dataset.from_tensor_slices(parse_angles(dataset))
+    angles = tf.data.Dataset.from_tensor_slices(parsed_angles)
 
     # Load first frame from each video and normalize
     images = dataset.map(get_initial_video_frame) \
@@ -72,6 +74,5 @@ def load_dataset(path_experiment, ramp_surface=1, size_batch=1, return_filenames
     train_dataset = dataset.skip(num_test) \
                            .shuffle(num_train, reshuffle_each_iteration=True) \
                            .repeat(None)
-
     return train_dataset, test_dataset
 

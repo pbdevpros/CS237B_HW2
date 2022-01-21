@@ -29,7 +29,7 @@ def wrench(f, p):
         p - 2D or 3D contact point.
 
     Return:
-        w - 3D or 6D contact wrench represented as (force, torque).
+        w - 3D or 6D contact wrench represented as (force, torque).    
     """
     ########## Your code starts here ##########
     # Hint: you may find cross_matrix(x) defined above helpful. This should be one line of code.
@@ -71,6 +71,7 @@ def cone_edges(f, mu):
         ########## Your code starts here ##########
         edges = [np.zeros(D)] * 4
 
+        
         ########## Your code ends here ##########
 
     else:
@@ -90,26 +91,28 @@ def form_closure_program(F):
         True/False - whether the form closure condition is satisfied.
     """
     ########## Your code starts here ##########
-    # Hint: You may find np.linalg.matrix_rank(F) helpful
+    # Hint: you may find np.linalg.matrix_rank(F) helpful
     # TODO: Replace the following program (check the cvxpy documentation)
 
-    k = cp.Variable(1)
-    objective = cp.Minimize(k)
-    constraints = [k >= 0]
+    # k = cp.Variable(1)
+    # objective = cp.Minimize(k)
+    # constraints = [k >= 0]
+
+
     ########## Your code ends here ##########
 
     prob = cp.Problem(objective, constraints)
-    prob.solve(verbose=False)
+    prob.solve(verbose=False, solver=cp.ECOS)
 
     return prob.status not in ['infeasible', 'unbounded']
 
-def is_in_form_closure(forces, points):
+def is_in_form_closure(normals, points):
     """
-    Calls form_closure_program() to determine whether the given contact forces
+    Calls form_closure_program() to determine whether the given contact normals
     are in form closure.
 
     Args:
-        forces - list of 2D or 3D contact forces.
+        normals - list of 2D or 3D contact forces.
         points - list of 2D or 3D contact points.
 
     Return:
@@ -118,6 +121,7 @@ def is_in_form_closure(forces, points):
     ########## Your code starts here ##########
     # TODO: Construct the F matrix (not necessarily 6 x 7)
     F = np.zeros((6,7))
+
 
     ########## Your code ends here ##########
 
@@ -138,7 +142,8 @@ def is_in_force_closure(forces, points, friction_coeffs):
     """
     ########## Your code starts here ##########
     # TODO: Call cone_edges() to construct the F matrix (not necessarily 6 x 7)
-    F = np.zeros((6,7))
+    F = np.zeros((6,7))    
+
 
     ########## Your code ends here ##########
 

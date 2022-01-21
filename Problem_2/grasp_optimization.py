@@ -2,6 +2,7 @@
 
 import cvxpy as cp
 import numpy as np
+import pdb  
 
 from utils import *
 
@@ -53,7 +54,7 @@ def grasp_optimization(grasp_normals, points, friction_coeffs, wrench_ext):
         wrench_ext      - external wrench applied to the object.
 
     Return:
-        f - grasp forces as a list of M numpy arrays.
+        f
     """
     D = points[0].shape[0]  # planar: 2, spatial: 3
     N = wrench_size(D)      # planar: 3, spatial: 6
@@ -65,16 +66,13 @@ def grasp_optimization(grasp_normals, points, friction_coeffs, wrench_ext):
     bs = []
     cs = []
     ds = []
-    F = np.zeros(1)
-    g = np.zeros(1)
-    h = np.zeros(1)
 
-    x = cp.Variable(1)
 
     x = solve_socp(x, As, bs, cs, ds, F, g, h, verbose=False)
 
     # TODO: extract the grasp forces from x as a stacked 1D vector
-    f = x
+    f = x[:-1]
+
     ########## Your code ends here ##########
 
     # Transform the forces to the global frame
@@ -89,8 +87,8 @@ def precompute_force_closure(grasp_normals, points, friction_coeffs):
     be found for any arbitrary external wrench without redoing the optimization.
 
     Args:
-        grasp_normals   - list of M surface normals at the contact points, pointing inwards.
-        points          - list of M grasp points p^(i).
+        grasp_normals   - list of M contact normals, pointing inwards from the object surface.
+        points          - list of M contact points p^(i).
         friction_coeffs - friction coefficients mu_i at each point p^(i).
 
     Return:
@@ -106,6 +104,7 @@ def precompute_force_closure(grasp_normals, points, friction_coeffs):
     #       wrenches and store them as rows in the matrix F. This matrix will be
     #       captured by the returned force_closure() function.
     F = np.zeros((2*N, M*D))
+
 
     ########## Your code ends here ##########
 
@@ -125,6 +124,7 @@ def precompute_force_closure(grasp_normals, points, friction_coeffs):
         # TODO: Compute the force closure forces as a stacked vector of shape (M*D)
         f = np.zeros(M*D)
 
+  
         ########## Your code ends here ##########
 
         forces = [f_i for f_i in f.reshape(M,D)]

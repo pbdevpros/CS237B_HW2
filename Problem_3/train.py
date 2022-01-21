@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 
 import argparse
-
-import tensorflow as tf1
-import tensorflow.compat.v2 as tf
-tf1.compat.v1.enable_eager_execution()
+import tensorflow as tf 
+import pdb 
+import os 
 
 from model import build_model, build_baseline_model, loss
 import utils
@@ -13,8 +12,8 @@ SIZE_BATCH = 32
 LEARNING_RATE=0.0001
 NUM_EPOCHS = 50
 
-PATH_CHECKPOINT = 'trained_models/cp-{epoch:03d}.ckpt'
-DIR_MODEL = 'trained_models/'
+PATH_CHECKPOINT = os.path.join('trained_models', 'cp-{epoch:03d}.ckpt')
+DIR_MODEL = 'trained_models'
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -22,17 +21,18 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # Load dataset
-    train_dataset, test_dataset = utils.load_dataset('phys101/scenarios/ramp',
+    ramp_dataset_path = os.path.join('phys101', 'scenarios', 'ramp')
+    train_dataset, test_dataset = utils.load_dataset(ramp_dataset_path,
                                                      ramp_surface=1,  # Choose ramp surface in experiments (1 or 2)
                                                      size_batch=SIZE_BATCH)
 
     # Build model
     if args.baseline:
         model = build_baseline_model()
-        path_model = DIR_MODEL + "trained_baseline.h5"
+        path_model = os.path.join(DIR_MODEL, "trained_baseline.h5")
     else:
         model = build_model()
-        path_model = DIR_MODEL + "trained.h5"
+        path_model = os.path.join(DIR_MODEL, "trained.h5")
 
     model.compile(optimizer=tf.keras.optimizers.Adam(LEARNING_RATE),
                   loss=loss)
@@ -44,7 +44,7 @@ if __name__ == '__main__':
                                                      period=5)
 
     # Tensorboard callback
-    tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir='./train_logs', update_freq='batch')
+    tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir='train_logs', update_freq='batch')
 
     model.summary()
 
