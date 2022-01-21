@@ -1,3 +1,2 @@
 opencv-python
 cvxpy
-h5py<3.0.0
