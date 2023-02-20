@@ -33,7 +33,7 @@ def wrench(f, p):
     """
     ########## Your code starts here ##########
     # Hint: you may find cross_matrix(x) defined above helpful. This should be one line of code.
-
+    w = (f, cross_matrix(p).dot(f))
     ########## Your code ends here ##########
 
     return w
@@ -94,15 +94,48 @@ def form_closure_program(F):
     # Hint: you may find np.linalg.matrix_rank(F) helpful
     # TODO: Replace the following program (check the cvxpy documentation)
 
-    # k = cp.Variable(1)
+    # N is the dimension of the wrench space
+    # M is the number of wrenches 
+    N, M = F.shape 
+
+    # Make sure there are N linearly independent matrices
+    r = np.linalg.matrix_rank(F) 
+    if r < N: return False
+
+    # k = np.ones((M,))
+    # k = cp.Variable()
     # objective = cp.Minimize(k)
-    # constraints = [k >= 0]
+    # constraints = [
+    #     F*k == 0,
+    #     k >= 1
+    # ]
 
-
+    # k = cp.Variable(1)
+    k = cp.Variable(F.shape[1])
+    # objective = cp.Minimize(k)
+    c = np.ones((F.shape[1],))
+    # objective = cp.Minimize(c @ k)
+    objective = cp.Minimize(c.T @ k)
+    # objective = cp.Minimize(cp.sum(cp.sum(F * k , axis = 1)) )
+    constraints = [
+        # cp.sum(F * k , axis = 0) == 0,
+        # np.sum(F * k, axis=1) == 0,
+        # cp.sum(cp.sum(F * k , axis = 1)) == 0,
+        # F * k == np.zeros((F.shape[0],)),
+        F * k == 0,
+        k >= 1
+    ]
+    # scipy.optimize.linprog(np.ones((F.shape[1],)), A_eq = F, b_eq = np.zeros((F.shape[0], )), bounds = [(1, None) for i in range(F.shape[1])] )
     ########## Your code ends here ##########
 
     prob = cp.Problem(objective, constraints)
-    prob.solve(verbose=False, solver=cp.ECOS)
+    prob.solve(verbose=True, solver=cp.ECOS)
+
+    # TODO: delete me!
+    print("Using matrix: \n{}".format(F))
+    print("Found problem status: {}".format(prob.status))
+    print("\n=====\n{}\n=====".format(prob))
+    print(prob.value)
 
     return prob.status not in ['infeasible', 'unbounded']
 
@@ -119,10 +152,24 @@ def is_in_form_closure(normals, points):
         True/False - whether the forces are in form closure.
     """
     ########## Your code starts here ##########
-    # TODO: Construct the F matrix (not necessarily 6 x 7)
-    F = np.zeros((6,7))
+    L = len(normals)
+    assert(L > 0)
+    assert(L == len(points))
 
+    # dimensionality is N=3 (for 2D), N=6 (for 3D)
+    M = L
+    N = len(normals[0])
+    if N == 2: N += 1
+    else: N *= 2
 
+    F = np.zeros((N, M))
+    for i in range(L):
+        f, tau = wrench(normals[i], points[i])
+        F[:, i] = np.concatenate((f, tau), axis=None)
+
+    # TODO: delete me!
+    # print()
+    # print(F)
     ########## Your code ends here ##########
 
     return form_closure_program(F)
