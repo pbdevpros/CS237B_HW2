@@ -63,15 +63,24 @@ def cone_edges(f, mu):
     if D == 2:
         ########## Your code starts here ##########
         edges = [np.zeros(D)] * 2
-
+        # fx, fy = f[0], f[1]
+        beta = np.arctan(mu * np.pi)
+        fz = np.linalg.norm(f)
+        edges[0][0] = (fz * np.cos(-beta))
+        edges[0][1] = (fz * np.sin(-beta))
+        edges[1][0] = (fz * np.cos(beta))
+        edges[1][1] = (fz * np.sin(beta))
         ########## Your code ends here ##########
 
     # Spatial wrenches
     elif D == 3:
         ########## Your code starts here ##########
         edges = [np.zeros(D)] * 4
-
-        
+        f1 = f + np.array([  mu,   0, 1])
+        f2 = f + np.array([   0,  mu, 1])
+        f3 = f + np.array([ -mu,   0, 1])
+        f4 = f + np.array([   0, -mu, 1])
+        edges = [ f1, f2, f3, f4]
         ########## Your code ends here ##########
 
     else:
@@ -122,14 +131,14 @@ def form_closure_program(F):
         # np.sum(F * k, axis=1) == 0,
         # cp.sum(cp.sum(F * k , axis = 1)) == 0,
         # F * k == np.zeros((F.shape[0],)),
-        F * k == 0,
+        F @ k == 0,
         k >= 1
     ]
     # scipy.optimize.linprog(np.ones((F.shape[1],)), A_eq = F, b_eq = np.zeros((F.shape[0], )), bounds = [(1, None) for i in range(F.shape[1])] )
     ########## Your code ends here ##########
 
     prob = cp.Problem(objective, constraints)
-    prob.solve(verbose=True, solver=cp.ECOS)
+    prob.solve(verbose=False, solver=cp.ECOS)
 
     # TODO: delete me!
     print("Using matrix: \n{}".format(F))
@@ -188,9 +197,24 @@ def is_in_force_closure(forces, points, friction_coeffs):
         True/False - whether the forces are in force closure.
     """
     ########## Your code starts here ##########
-    # TODO: Call cone_edges() to construct the F matrix (not necessarily 6 x 7)
-    F = np.zeros((6,7))    
+    L = len(forces)
+    assert(L > 0)
+    assert(L == len(points))
 
+    # dimensionality is N=3 (for 2D), N=6 (for 3D)
+    M = L
+    N = len(forces[0])
+    if N == 2: N += 1
+    else: N *= 2
+
+    F = np.array([])
+    for i in range(L):
+        edges = cone_edges(forces[i], friction_coeffs[i])
+        for edge in edges:
+            f, tau = wrench(edge, points[i])
+            w = np.array([np.concatenate((f, tau), axis=0)]).T
+            if F.shape[0] == 0: F = w
+            else: F = np.hstack((F, w))
 
     ########## Your code ends here ##########
 
