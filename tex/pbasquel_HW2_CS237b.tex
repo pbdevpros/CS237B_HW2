@@ -58,6 +58,16 @@
 \maketitle
 \pagestyle{fancy} 
 
+%%%
+%% PICTURE
+%\begin{figure}
+%\begin{center}
+%\includegraphics[width=13cm,keepaspectratio]{""}
+%\caption{}
+%\label{fig:fignum}
+%\end{center}
+%\end{figure}
+%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -94,8 +104,30 @@ To elaborate with an example, there will always exist a wrench (or vector in the
 \end{align}
 In this case, assuming the linear combination of the wrenches require scalars $\beta_{k} > 0$, it is clear that a wrench like $\omega_4 = [-1, -1, -1]$ is necessary to ensure the grasp can apply a zero wrench for all external wrenches. This follows with the definition of form closure, as $\omega_4$ is not linearly independent from the other wrenches. It also is equivalent to saying the wrench space has to contain the origin in its interior. This should also be clear  that it is trivial to demonstrate the same for the 3D case.
 
-\end{enumerate}
+\item An image is attached showing the wrench hull diagrams. These can be used to estimate the validity of removing one of the point contacts. 
 
+TODO: write valid contacts
+
+TOOD: tau is estimated based on the distances from the center of mass. It is clear that the distance from center of mass to a point is greatest at the far corners of the triangle, while being shortest at the perpendicular to the edges. Using basic geometry we can calculate the minimum and maximum line length and estimate the magnitude of tau at some value in between, based on visual inspection of the diagram. 
+
+%%
+% PICTURE
+\begin{figure}
+\begin{center}
+\includegraphics[width=13cm,keepaspectratio]{"images/P1iii.png"}
+\caption{Wrench Hull Diagrams for (iii)}
+\label{fig:P1iii}
+\end{center}
+\end{figure}
+%%
+
+\item See code.
+
+\item See code.
+
+\item TODO:
+
+\end{enumerate}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -103,6 +135,8 @@ In this case, assuming the linear combination of the wrenches require scalars $\
 %%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
 
 \section*{Problem 2}
 \begin{enumerate}[label=(\roman*)]

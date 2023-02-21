@@ -65,22 +65,64 @@ def cone_edges(f, mu):
         edges = [np.zeros(D)] * 2
         # fx, fy = f[0], f[1]
         beta = np.arctan(mu * np.pi)
-        fz = np.linalg.norm(f)
-        edges[0][0] = (fz * np.cos(-beta))
-        edges[0][1] = (fz * np.sin(-beta))
-        edges[1][0] = (fz * np.cos(beta))
-        edges[1][1] = (fz * np.sin(beta))
+        # fz = np.linalg.norm(f)
+        # beta = np.arctan(mu * np.pi)
+        # offset =  np.pi / 2
+        # edges[0][0] = (fz * np.cos(-beta))
+        # edges[0][1] = (fz * np.sin(-beta))
+        # edges[1][0] = (fz * np.cos(beta))
+        # edges[1][1] = (fz * np.sin(beta))
+        R = np.array([
+            [np.cos(beta), -np.sin(beta)],
+            [np.sin(beta), np.cos(beta)]
+        ])
+        edges[0] = f.dot(R)
+        R = np.array([
+            [np.cos(beta), np.sin(beta)],
+            [-np.sin(beta), np.cos(beta)]
+        ])
+        edges[1] = f.dot(R)
         ########## Your code ends here ##########
 
     # Spatial wrenches
     elif D == 3:
         ########## Your code starts here ##########
+        def rotz(th, b):
+            return np.array([
+                [    np.cos(th),   -b * np.sin(th),     0],
+                [b * np.sin(th),        np.cos(th),     0],
+                [             0,                 0,     1],
+            ])
+        def rotx(th, b):
+            return np.array([
+                [             1,                 0,                   0],
+                [             0,        np.cos(th),     -b * np.sin(th)],
+                [             0,    b * np.sin(th),          np.cos(th)],
+            ])
+
         edges = [np.zeros(D)] * 4
-        f1 = f + np.array([  mu,   0, 1])
-        f2 = f + np.array([   0,  mu, 1])
-        f3 = f + np.array([ -mu,   0, 1])
-        f4 = f + np.array([   0, -mu, 1])
-        edges = [ f1, f2, f3, f4]
+        # beta = np.arctan(mu * np.pi)
+        # R = rotz(beta, 1)
+        # f1 = f.dot(R)
+        # R = rotz(beta, -1)
+        # f2 = f.dot(R)
+        # R = rotx(beta, 1)
+        # f3 = f.dot(R)
+        # R = rotx(beta, -1)
+        # f4 = f.dot(R)
+        fz = mu * np.linalg.norm(f)
+        f1 = f + (mu * np.array([f[0] + fz, f[1] +  0, f[2]]))
+        f2 = f + (mu * np.array([f[0] +  0, f[1] + fz, f[2]]))
+        f3 = f + (mu * np.array([f[0] - fz, f[1] +  0, f[2]]))
+        f4 = f + (mu * np.array([f[0] +  0, f[1] - fz, f[2]]))
+        edges = [ 
+            f1, 
+            f2, 
+            f3, 
+            f4
+        ]
+        print("f is:\n{}".format(f))
+        print("\nedges:\n{}".format(edges))
         ########## Your code ends here ##########
 
     else:
@@ -141,10 +183,10 @@ def form_closure_program(F):
     prob.solve(verbose=False, solver=cp.ECOS)
 
     # TODO: delete me!
-    print("Using matrix: \n{}".format(F))
-    print("Found problem status: {}".format(prob.status))
-    print("\n=====\n{}\n=====".format(prob))
-    print(prob.value)
+    # print("Using matrix: \n{}".format(F))
+    # print("Found problem status: {}".format(prob.status))
+    # print("\n=====\n{}\n=====".format(prob))
+    # print(prob.value)
 
     return prob.status not in ['infeasible', 'unbounded']
 
